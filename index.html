@@ -114,15 +114,6 @@
             background: #e0e0e0;
         }
 
-        .view-controls {
-            display: flex;
-            gap: 0.75rem;
-            justify-content: center;
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 2px solid #f0f0f0;
-        }
-
         /* Tree/Network Visualization */
         .network-container {
             background: white;
@@ -135,9 +126,9 @@
 
         .network-grid {
             display: flex;
+            flex-direction: column;
             gap: 3rem;
-            justify-content: center;
-            flex-wrap: wrap;
+            align-items: center;
             padding: 2rem;
         }
 
@@ -145,8 +136,9 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-width: 300px;
-            max-width: 350px;
+            min-width: 400px;
+            max-width: 900px;
+            width: 100%;
         }
 
         .person-node {
@@ -189,6 +181,7 @@
             display: flex;
             gap: 0.5rem;
             justify-content: center;
+            flex-wrap: wrap;
         }
 
         .btn-node {
@@ -241,77 +234,51 @@
             gap: 0.75rem;
         }
 
-        .job-count {
-            text-align: center;
-            color: #667eea;
-            font-weight: 600;
-            font-size: 0.95rem;
-            margin-bottom: 0.5rem;
-        }
-
         .job-card {
             background: #f8f9ff;
             border: 2px solid #e8ebff;
             border-radius: 12px;
-            padding: 1rem;
+            padding: 1.5rem;
             transition: all 0.3s;
             position: relative;
+            text-align: center;
         }
 
         .job-card:hover {
             border-color: #667eea;
-            transform: translateX(4px);
+            transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
         }
 
-        .job-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 0.5rem;
+        .job-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
         }
 
-        .job-title {
-            font-size: 1.05rem;
+        .job-card-title {
+            font-size: 1.1rem;
             font-weight: 600;
-            color: #333;
-        }
-
-        .favorite-btn {
-            background: none;
-            border: none;
-            font-size: 1.3rem;
-            cursor: pointer;
-            transition: transform 0.2s;
-            padding: 0;
-        }
-
-        .favorite-btn:hover {
-            transform: scale(1.2);
-        }
-
-        .favorite-btn.favorited {
-            color: #ffd700;
-        }
-
-        .job-meta {
-            font-size: 0.85rem;
-            color: #666;
+            color: #667eea;
             margin-bottom: 0.75rem;
         }
 
-        .job-meta span {
-            margin-right: 0.75rem;
+        .job-card-description {
+            color: #666;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+            line-height: 1.5;
         }
 
         .job-actions {
             display: flex;
             gap: 0.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
         }
 
         .btn-small {
-            padding: 0.4rem 0.8rem;
-            font-size: 0.8rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
         }
 
         .empty-state {
@@ -325,26 +292,6 @@
             margin-bottom: 1rem;
         }
 
-        .loading {
-            text-align: center;
-            padding: 2rem;
-        }
-
-        .spinner {
-            border: 3px solid #f0f0f0;
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 1rem;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
         @media (max-width: 768px) {
             .add-contact-form {
                 grid-template-columns: 1fr;
@@ -354,6 +301,10 @@
                 flex-direction: column;
                 align-items: center;
             }
+
+            body {
+                padding: 1rem;
+            }
         }
     </style>
 </head>
@@ -361,7 +312,7 @@
     <div class="container">
         <header>
             <h1>🔗 Networker</h1>
-            <p class="tagline">Discover opportunities through your network</p>
+            <p class="tagline">Discover opportunities through your network on Seek</p>
         </header>
 
         <div class="controls">
@@ -378,16 +329,7 @@
                     <label>Email</label>
                     <input type="email" id="contactEmail" placeholder="john@example.com">
                 </div>
-                <div class="form-group">
-                    <label>Company Careers URL</label>
-                    <input type="url" id="careersUrl" placeholder="https://company.com/careers">
-                </div>
                 <button class="btn btn-primary" onclick="addContact()" style="grid-column: 1 / -1;">Add to Network</button>
-            </div>
-            
-            <div class="view-controls">
-                <button class="btn btn-secondary" onclick="showAllJobs()">Show All Jobs</button>
-                <button class="btn btn-secondary" onclick="showFavorites()">⭐ Favorites Only</button>
             </div>
         </div>
 
@@ -396,7 +338,7 @@
                 <div class="empty-state">
                     <div class="empty-state-icon">🌳</div>
                     <p>Add contacts to build your network tree</p>
-                    <p style="font-size: 0.9rem; margin-top: 0.5rem;">Each person will appear with their company's jobs below them</p>
+                    <p style="font-size: 0.9rem; margin-top: 0.5rem;">Jobs will be searched on Seek using each company's name</p>
                 </div>
             </div>
         </div>
@@ -404,21 +346,21 @@
 
     <script>
         let contacts = JSON.parse(localStorage.getItem('networker_contacts')) || [];
-        let jobs = JSON.parse(localStorage.getItem('networker_jobs')) || [];
-        let favorites = JSON.parse(localStorage.getItem('networker_favorites')) || [];
-        let currentView = 'all';
 
         function saveData() {
             localStorage.setItem('networker_contacts', JSON.stringify(contacts));
-            localStorage.setItem('networker_jobs', JSON.stringify(jobs));
-            localStorage.setItem('networker_favorites', JSON.stringify(favorites));
+        }
+
+        function getSeekUrl(companyName) {
+            // Generate Seek.com.au search URL with company name as keyword
+            const encodedCompany = encodeURIComponent(companyName);
+            return `https://www.seek.com.au/jobs?keywords=${encodedCompany}`;
         }
 
         function addContact() {
             const name = document.getElementById('contactName').value.trim();
             const company = document.getElementById('contactCompany').value.trim();
             const email = document.getElementById('contactEmail').value.trim();
-            const careersUrl = document.getElementById('careersUrl').value.trim();
 
             if (!name || !company || !email) {
                 alert('Please fill in name, company, and email');
@@ -430,7 +372,7 @@
                 name,
                 company,
                 email,
-                careersUrl: careersUrl || null,
+                seekUrl: getSeekUrl(company),
                 addedDate: new Date().toISOString()
             };
 
@@ -442,112 +384,22 @@
             document.getElementById('contactName').value = '';
             document.getElementById('contactCompany').value = '';
             document.getElementById('contactEmail').value = '';
-            document.getElementById('careersUrl').value = '';
-
-            // Auto-fetch jobs if URL provided
-            if (careersUrl) {
-                fetchJobsForContact(contact);
-            }
         }
 
         function deleteContact(id) {
-            if (confirm('Are you sure you want to delete this contact and their jobs?')) {
+            if (confirm('Are you sure you want to delete this contact?')) {
                 contacts = contacts.filter(c => c.id !== id);
-                jobs = jobs.filter(j => j.contactId !== id);
                 saveData();
                 renderNetwork();
             }
         }
 
-        async function fetchJobsForContact(contact) {
-            if (!contact.careersUrl) {
-                alert('No careers URL provided for this contact');
-                return;
-            }
-
-            // Show loading state for this specific contact
-            renderNetwork();
-
-            // Simulate API call
-            setTimeout(() => {
-                const sampleJobs = generateSampleJobs(contact);
-                
-                // Remove old jobs for this contact
-                jobs = jobs.filter(j => j.contactId !== contact.id);
-                
-                // Add new jobs
-                jobs.push(...sampleJobs);
-                saveData();
-                renderNetwork();
-            }, 1500);
+        function openSeekJobs(url) {
+            window.open(url, '_blank');
         }
 
-        function generateSampleJobs(contact) {
-            const positions = [
-                'Business Analyst',
-                'Senior Business Analyst',
-                'Product Manager',
-                'Data Analyst',
-                'Project Manager',
-                'UX Researcher',
-                'Marketing Manager',
-                'Software Engineer',
-                'Technical Writer',
-                'Solutions Architect'
-            ];
-
-            const departments = ['Product', 'Engineering', 'Marketing', 'Operations', 'Finance', 'Sales'];
-            const locations = ['Remote', 'New York', 'San Francisco', 'Austin', 'London', 'Boston', 'Seattle'];
-
-            const numJobs = Math.floor(Math.random() * 6) + 2;
-            const sampleJobs = [];
-
-            for (let i = 0; i < numJobs; i++) {
-                sampleJobs.push({
-                    id: Date.now() + i + Math.random(),
-                    contactId: contact.id,
-                    title: positions[Math.floor(Math.random() * positions.length)],
-                    company: contact.company,
-                    department: departments[Math.floor(Math.random() * departments.length)],
-                    location: locations[Math.floor(Math.random() * locations.length)],
-                    postedDate: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-                    url: contact.careersUrl,
-                    contactName: contact.name
-                });
-            }
-
-            return sampleJobs;
-        }
-
-        function toggleFavorite(jobId) {
-            const index = favorites.indexOf(jobId);
-            if (index > -1) {
-                favorites.splice(index, 1);
-            } else {
-                favorites.push(jobId);
-            }
-            saveData();
-            renderNetwork();
-        }
-
-        function showAllJobs() {
-            currentView = 'all';
-            renderNetwork();
-        }
-
-        function showFavorites() {
-            currentView = 'favorites';
-            renderNetwork();
-        }
-
-        function getJobsForContact(contactId) {
-            let contactJobs = jobs.filter(j => j.contactId === contactId);
-            
-            if (currentView === 'favorites') {
-                contactJobs = contactJobs.filter(j => favorites.includes(j.id));
-            }
-            
-            return contactJobs;
+        function contactPerson(name, email) {
+            alert(`Contact ${name} at ${email}`);
         }
 
         function renderNetwork() {
@@ -558,16 +410,13 @@
                     <div class="empty-state">
                         <div class="empty-state-icon">🌳</div>
                         <p>Add contacts to build your network tree</p>
-                        <p style="font-size: 0.9rem; margin-top: 0.5rem;">Each person will appear with their company's jobs below them</p>
+                        <p style="font-size: 0.9rem; margin-top: 0.5rem;">Jobs will be searched on Seek using each company's name</p>
                     </div>
                 `;
                 return;
             }
 
             container.innerHTML = contacts.map(contact => {
-                const contactJobs = getJobsForContact(contact.id);
-                const isLoading = contact.careersUrl && contactJobs.length === 0;
-                
                 return `
                     <div class="person-tree">
                         <!-- Person Node -->
@@ -576,11 +425,9 @@
                             <div class="person-company">${contact.company}</div>
                             <div class="person-email">${contact.email}</div>
                             <div class="person-actions">
-                                ${contact.careersUrl ? `
-                                    <button class="btn btn-node" onclick='fetchJobsForContact(${JSON.stringify(contact)})'>
-                                        🔄 Refresh Jobs
-                                    </button>
-                                ` : ''}
+                                <button class="btn btn-node" onclick="openSeekJobs('${contact.seekUrl}')">
+                                    🔍 View Jobs on Seek
+                                </button>
                                 <button class="btn btn-node btn-delete" onclick="deleteContact(${contact.id})">
                                     🗑️ Delete
                                 </button>
@@ -588,57 +435,26 @@
                         </div>
 
                         <!-- Connection Line -->
-                        ${contactJobs.length > 0 || isLoading ? '<div class="connection-line"></div>' : ''}
+                        <div class="connection-line"></div>
 
-                        <!-- Jobs Branch -->
+                        <!-- Jobs Info -->
                         <div class="jobs-branch">
-                            ${isLoading ? `
-                                <div class="loading">
-                                    <div class="spinner"></div>
-                                    <p>Loading jobs...</p>
-                                </div>
-                            ` : contactJobs.length > 0 ? `
-                                <div class="job-count">
-                                    ${contactJobs.length} ${contactJobs.length === 1 ? 'opportunity' : 'opportunities'} available
-                                </div>
-                                ${contactJobs.map(job => {
-                                    const isFavorited = favorites.includes(job.id);
-                                    const postedDaysAgo = Math.floor((Date.now() - new Date(job.postedDate)) / (1000 * 60 * 60 * 24));
-                                    
-                                    return `
-                                        <div class="job-card">
-                                            <div class="job-card-header">
-                                                <div class="job-title">${job.title}</div>
-                                                <button class="favorite-btn ${isFavorited ? 'favorited' : ''}" onclick="toggleFavorite(${job.id})">
-                                                    ${isFavorited ? '⭐' : '☆'}
-                                                </button>
-                                            </div>
-                                            <div class="job-meta">
-                                                <span>📍 ${job.location}</span>
-                                                <span>🏢 ${job.department}</span>
-                                                <span>📅 ${postedDaysAgo}d ago</span>
-                                            </div>
-                                            <div class="job-actions">
-                                                <a href="${job.url}" target="_blank" class="btn btn-primary btn-small">View Job</a>
-                                                <button class="btn btn-secondary btn-small" onclick="alert('Reach out to ${contact.name} at ${contact.email}')">
-                                                    Contact ${contact.name.split(' ')[0]}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    `;
-                                }).join('')}
-                            ` : contact.careersUrl ? `
-                                <div style="text-align: center; color: #888; padding: 1rem;">
-                                    <p>No jobs loaded yet</p>
-                                    <button class="btn btn-primary btn-small" style="margin-top: 0.5rem;" onclick='fetchJobsForContact(${JSON.stringify(contact)})'>
-                                        Fetch Jobs
+                            <div class="job-card" style="padding: 0; overflow: hidden;">
+                                <div style="background: #667eea; color: white; padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                                    <div style="font-weight: 600;">
+                                        💼 ${contact.company} Jobs on Seek
+                                    </div>
+                                    <button class="btn btn-secondary btn-small" onclick="contactPerson('${contact.name}', '${contact.email}')" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3);">
+                                        Contact ${contact.name.split(' ')[0]}
                                     </button>
                                 </div>
-                            ` : `
-                                <div style="text-align: center; color: #888; padding: 1rem; font-size: 0.9rem;">
-                                    Add a careers URL to see job openings
-                                </div>
-                            `}
+                                <iframe 
+                                    src="${contact.seekUrl}" 
+                                    style="width: 100%; height: 600px; border: none;"
+                                    title="${contact.company} jobs on Seek"
+                                    sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                                ></iframe>
+                            </div>
                         </div>
                     </div>
                 `;
